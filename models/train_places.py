@@ -1,10 +1,9 @@
 from typing import Optional
 from pydantic import BaseModel
-from datetime import datetime
 from models.image import Image
 from models.route import Route
 from models.comfort_option import ComfortOption
-from models.place_quantity import PlaceQuantity, Places
+from models.place_quantity import Places
 
 
 class Cars(BaseModel):

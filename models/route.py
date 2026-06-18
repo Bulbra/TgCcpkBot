@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from models.station import Station
-from typing import Optional, Any
+from typing import Optional
 
 
 class Route(BaseModel):

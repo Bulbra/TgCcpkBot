@@ -1,3 +1,9 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import db
+
 from models.sorted_train import SortedTrain
 from models.train_places import TrainPlacesObject
 from models.unsorted_train import UnsortedTrain
