@@ -1,7 +1,13 @@
 from datetime import datetime
-from .models import User, Subscription
+from .models import User, Subscription, Base
 from sqlalchemy import select, update, delete, insert, func
-from . import session_factory
+from . import session_factory, engine
+
+
+# create if not exists all tables --------------------------------------------------------------------------------------
+async def init_all_tables():
+    async with engine.begin() as session:
+        await session.run_sync(Base.metadata.create_all)
 
 
 # users ----------------------------------------------------------------------------------------------------------------
@@ -13,12 +19,12 @@ async def get_all_users() -> list[User]:
         return result.scalars().all()
 
 
-async def create_user(tg_id: int) -> None:
+async def create_user(tg_id: int, reg_date: datetime) -> None:
     async with session_factory() as session:
-        await session.add(
+        session.add(
             User(
                 tg_id=tg_id,
-                reg_date=datetime.now()
+                reg_date=reg_date
             )
         )
         await session.commit()
@@ -33,6 +39,18 @@ async def get_user_by_tg_id(tg_id: int) -> User:
 
 
 # subs -----------------------------------------------------------------------------------------------------------------
+async def get_sub(from_station_id: int, to_station_id: int, origin_date: datetime, user_id: int) -> Subscription:
+    async with session_factory() as session:
+        result = await session.execute(
+            select(Subscription).where(
+                Subscription.origin_date == origin_date,
+                Subscription.user_id == user_id,
+                Subscription.from_station_id == from_station_id,
+                Subscription.to_station_id == to_station_id)
+        )
+        return result.scalar()
+
+
 async def get_all_user_subs_by_user_tg_id_with_join(user_tg_id: int) -> list[Subscription]:
     async with session_factory() as session:
         result = await session.execute(
@@ -43,13 +61,13 @@ async def get_all_user_subs_by_user_tg_id_with_join(user_tg_id: int) -> list[Sub
         return result.scalars().all()
 
 
-async def get_all_user_subs_by_user_tg_id(user_tg_id: int) -> list[Subscription]:
+async def get_all_user_subs_by_user_tg_id(user_tg_id: int) -> list[Subscription] | None:
     async with session_factory() as session:
         user = await session.execute(
             select(User).where(User.tg_id == user_tg_id)
         ).scalar()
         if not user:
-            return []
+            return None
         result = await session.execute(
             select(Subscription).where(Subscription.user_id == user.id)
         )
@@ -57,20 +75,21 @@ async def get_all_user_subs_by_user_tg_id(user_tg_id: int) -> list[Subscription]
 
 
 async def create_sub_by_user_tg_id(
-        from_station_id: int, to_station_id: int, origin_date: datetime, user_tg_id: int) -> None:
+        from_station_id: int, to_station_id: int, origin_date: datetime, user_tg_id: int) -> bool:
     async with session_factory() as session:
         user = await session.execute(
             select(User).where(User.tg_id == user_tg_id)
         ).scalar()
         if not user:
-            return
-        await session.add(Subscription(
+            return False
+        session.add(Subscription(
             user_id=user.id,
             from_station_id=from_station_id,
             to_station_id=to_station_id,
             origin_date=origin_date
         ))
         await session.commit()
+        return True
 
 
 async def delete_sub_by_sub_id(sub_id: int) -> None:
