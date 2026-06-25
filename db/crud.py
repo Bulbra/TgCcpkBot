@@ -61,6 +61,14 @@ async def get_all_user_subs_by_user_tg_id_with_join(user_tg_id: int) -> list[Sub
         return result.scalars().all()
 
 
+async def get_all_user_subs_with_join() -> list[Subscription]:
+    async with session_factory() as session:
+        result = await session.execute(
+            select(Subscription)
+            .join(User, Subscription.user_id == User.id)
+        )
+        return result.scalars().all()
+
 async def get_all_user_subs_by_user_tg_id(user_tg_id: int) -> list[Subscription] | None:
     async with session_factory() as session:
         user = await session.execute(
