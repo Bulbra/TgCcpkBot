@@ -1,0 +1,3 @@
+[submodule "TestProxyForTG"]
+	path = TestProxyForTG
+	url = git@github.com:Bulbra/TestProxyForTG.git
