@@ -110,3 +110,4 @@ async def delete_all_user_subs_by_user_tg_id(user_tg_id: int) -> None:
     async with session_factory() as session:
         await session.execute(delete(Subscription).where(Subscription.user_id == user_tg_id))
         await session.commit()
+
